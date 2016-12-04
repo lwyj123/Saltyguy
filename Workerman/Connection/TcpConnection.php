@@ -214,7 +214,6 @@ class TcpConnection extends ConnectionInterface
      */
     public function __construct($socket, $remote_address = '')
     {
-        self::$statistics['connection_count']++;
         $this->id      = $this->_id = self::$_idRecorder++;
         $this->_socket = $socket;
         stream_set_blocking($this->_socket, 0);
@@ -248,7 +247,6 @@ class TcpConnection extends ConnectionInterface
         if ($this->_status === self::STATUS_INITIAL || $this->_status === self::STATUS_CONNECTING) {
             if ($this->_sendBuffer) {
                 if ($this->bufferIsFull()) {
-                    self::$statistics['send_fail']++;
                     return false;
                 }
             }
@@ -272,7 +270,6 @@ class TcpConnection extends ConnectionInterface
             } else {
                 // Connection closed?
                 if (!is_resource($this->_socket) || feof($this->_socket)) {
-                    self::$statistics['send_fail']++;
                     if ($this->onError) {
                         try {
                             call_user_func($this->onError, $this, WORKERMAN_SEND_FAIL, 'client closed');
@@ -295,7 +292,6 @@ class TcpConnection extends ConnectionInterface
             return null;
         } else {
             if ($this->bufferIsFull()) {
-                self::$statistics['send_fail']++;
                 return false;
             }
 
@@ -406,8 +402,6 @@ class TcpConnection extends ConnectionInterface
                     }
                 }
 
-                // The data is enough for a packet.
-                self::$statistics['total_request']++;
                 // The current packet length is equal to the length of the buffer.
                 if (strlen($this->_recvBuffer) === $this->_currentPackageLength) {
                     $one_request_buffer = $this->_recvBuffer;
@@ -442,7 +436,6 @@ class TcpConnection extends ConnectionInterface
         }
 
         // Applications protocol is not set.
-        self::$statistics['total_request']++;
         if (!$this->onMessage) {
             $this->_recvBuffer = '';
             return;
@@ -491,7 +484,6 @@ class TcpConnection extends ConnectionInterface
         if ($len > 0) {
             $this->_sendBuffer = substr($this->_sendBuffer, $len);
         } else {
-            self::$statistics['send_fail']++;
             $this->destroy();
         }
     }
@@ -667,6 +659,6 @@ class TcpConnection extends ConnectionInterface
      */
     public function __destruct()
     {
-        self::$statistics['connection_count']--;
+
     }
 }

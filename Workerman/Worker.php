@@ -353,7 +353,6 @@ class Worker
         self::init();
         self::parseCommand();
         self::initWorkers();
-        self::installSignal();
         self::saveMasterPid();
         self::forkWorkers();
         self::displayUI();
@@ -535,49 +534,6 @@ class Worker
         $master_is_alive = $master_pid && @posix_kill($master_pid, 0);
 
     }
-
-    /**
-     * Install signal handler.
-     *
-     * @return void
-     */
-    protected static function installSignal()
-    {
-        // stop
-        pcntl_signal(SIGINT, array('\Workerman\Worker', 'signalHandler'), false);
-        // ignore
-        pcntl_signal(SIGPIPE, SIG_IGN, false);
-    }
-
-    /**
-     * Reinstall signal handler.
-     *
-     * @return void
-     */
-    protected static function reinstallSignal()
-    {
-        // uninstall stop signal handler
-        pcntl_signal(SIGINT, SIG_IGN, false);
-        // reinstall stop signal handler
-        self::$globalEvent->add(SIGINT, EventInterface::EV_SIGNAL, array('\Workerman\Worker', 'signalHandler'));
-    }
-
-    /**
-     * Signal handler.
-     *
-     * @param int $signal
-     */
-    public static function signalHandler($signal)
-    {
-        switch ($signal) {
-            // Stop.
-            case SIGINT:
-                self::stopAll();
-                break;
-        }
-    }
-
-
 
     /**
      * Save pid.
@@ -809,95 +765,6 @@ class Worker
     }
 
 
-    /**
-     * Stop.
-     *
-     * @return void
-     */
-    public static function stopAll()
-    {
-        self::$_status = self::STATUS_SHUTDOWN;
-        // For master process.
-        if (self::$_masterPid === posix_getpid()) {
-            $worker_pid_array = self::getAllWorkerPids();
-            // Send stop signal to all child processes.
-            foreach ($worker_pid_array as $worker_pid) {
-                posix_kill($worker_pid, SIGINT);
-                Timer::add(self::KILL_WORKER_TIMER_TIME, 'posix_kill', array($worker_pid, SIGKILL), false);
-            }
-        } // For child processes.
-        else {
-            // Execute exit.
-            foreach (self::$_workers as $worker) {
-                $worker->stop();
-            }
-            exit(0);
-        }
-    }
-
-    /**
-     * Check errors when current process exited.
-     *
-     * @return void
-     */
-    public static function checkErrors()
-    {
-        if (self::STATUS_SHUTDOWN != self::$_status) {
-            $error_msg = "WORKER EXIT UNEXPECTED ";
-            $errors    = error_get_last();
-            if ($errors && ($errors['type'] === E_ERROR ||
-                    $errors['type'] === E_PARSE ||
-                    $errors['type'] === E_CORE_ERROR ||
-                    $errors['type'] === E_COMPILE_ERROR ||
-                    $errors['type'] === E_RECOVERABLE_ERROR)
-            ) {
-                $error_msg .= self::getErrorType($errors['type']) . " {$errors['message']} in {$errors['file']} on line {$errors['line']}";
-            }
-        }
-    }
-
-    /**
-     * Get error message by error code.
-     *
-     * @param integer $type
-     * @return string
-     */
-    protected static function getErrorType($type)
-    {
-        switch ($type) {
-            case E_ERROR: // 1 //
-                return 'E_ERROR';
-            case E_WARNING: // 2 //
-                return 'E_WARNING';
-            case E_PARSE: // 4 //
-                return 'E_PARSE';
-            case E_NOTICE: // 8 //
-                return 'E_NOTICE';
-            case E_CORE_ERROR: // 16 //
-                return 'E_CORE_ERROR';
-            case E_CORE_WARNING: // 32 //
-                return 'E_CORE_WARNING';
-            case E_COMPILE_ERROR: // 64 //
-                return 'E_COMPILE_ERROR';
-            case E_COMPILE_WARNING: // 128 //
-                return 'E_COMPILE_WARNING';
-            case E_USER_ERROR: // 256 //
-                return 'E_USER_ERROR';
-            case E_USER_WARNING: // 512 //
-                return 'E_USER_WARNING';
-            case E_USER_NOTICE: // 1024 //
-                return 'E_USER_NOTICE';
-            case E_STRICT: // 2048 //
-                return 'E_STRICT';
-            case E_RECOVERABLE_ERROR: // 4096 //
-                return 'E_RECOVERABLE_ERROR';
-            case E_DEPRECATED: // 8192 //
-                return 'E_DEPRECATED';
-            case E_USER_DEPRECATED: // 16384 //
-                return 'E_USER_DEPRECATED';
-        }
-        return "";
-    }
 
     /**
      * Safe Echo.
@@ -1029,9 +896,6 @@ class Worker
         //Update process state.
         self::$_status = self::STATUS_RUNNING;
 
-        // Register shutdown function for checking errors.
-        register_shutdown_function(array("\\Workerman\\Worker", 'checkErrors'));
-
         // Set autoload root path.
         Autoloader::setRootPath($this->_autoloadRootPath);
 
@@ -1045,8 +909,6 @@ class Worker
             }
         }
 
-        // Reinstall signal.
-        self::reinstallSignal();
 
         // Init Timer.
         Timer::init(self::$globalEvent);

@@ -18,17 +18,7 @@ namespace Workerman\Connection;
  */
 abstract class  ConnectionInterface
 {
-    /**
-     * Statistics for status command.
-     *
-     * @var array
-     */
-    public static $statistics = array(
-        'connection_count' => 0,
-        'total_request'    => 0,
-        'throw_exception'  => 0,
-        'send_fail'        => 0,
-    );
+
 
     /**
      * Emitted when data is received.
