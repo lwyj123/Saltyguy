@@ -23,6 +23,8 @@ class Http
 {
     /**
      * Check the integrity of the package.
+     * 检验报文是否完整
+     * 
      *
      * @param string        $recv_buffer
      * @param TcpConnection $connection

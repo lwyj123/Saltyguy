@@ -367,7 +367,6 @@ class TcpConnection extends ConnectionInterface
     public function baseRead($socket, $check_eof = true)
     {
         $buffer = fread($socket, self::READ_BUFFER_SIZE);
-
         // Check connection closed.
         if ($buffer === '' || $buffer === false) {
             if ($check_eof && (feof($socket) || !is_resource($socket) || $buffer === false)) {

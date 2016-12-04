@@ -1,0 +1,30 @@
+recv_buffer的格式(original header)
+
+	GET /irktuk HTTP/1.1
+	Host: 0.0.0.0:2348
+	User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0
+	Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+	Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+	Accept-Encoding: gzip, deflate
+	Connection: keep-alive
+	If-Modified-Since: Sun, 04 Dec 2016 14:02:24 GMT
+
+    POST **** HTTP/1.1
+    Host: pos.baidu.com
+	User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0
+	Accept: */*
+	Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+	Accept-Encoding: gzip, deflate
+	X-Requested-With: XMLHttpRequest
+	Referer: http://pos.baidu.com/pcqm?rtbid=2571210&rdid=10625082&dc=2&di=706067&dri=0&dis=0&dai=1&ps=1735x385&dcb=BAIDU_SSP_define&dtm=HTML_POST&dvi=0.0&dci=-1&dpt=none&tsr=0&tpr=1480833181688&ti=%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8BHTTP%E8%AF%B7%E6%B1%82%E5%A4%B4_%E7%99%BE%E5%BA%A6%E7%BB%8F%E9%AA%8C&ari=2&dbv=0&drs=1&pcs=1841x703&pss=1841x1735&cfv=11&cpl=6&chi=1&cce=true&cec=UTF-8&tlm=1480833181&rw=703&ltu=http%3A%2F%2Fjingyan.baidu.com%2Farticle%2Fa3761b2b8458321576f9aaf8.html&ltr=https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3DofV4a5ZO81-rTPcuoD3JCF5iMjwQc7KqosfF7bM5zOzgmGEWox1wFfMPX769K0AGWSSM1Je3hILC-0urZ6NS2QJecF5XhKy3XgM0dehB7FS%26wd%3D%26eqid%3D95187d3000004ba0000000055843b88f&ecd=1&psr=1920x1080&par=1855x1056&pis=-1x-1&ccd=24&cja=false&cmi=46&col=zh-CN&cdo=-1&tcn=1480833182&qn=3e7ee82aa83ed84d&tt=1480833181353.338.436.436
+	Cookie: BDUSS=G8wc3lKdXVjSVFTbERBMEpJUEY1WHQwaHlnZFFkb05JanlCZ2FTT3dpdnRWV05YQVFBQUFBJCQAAAAAAAAAAAEAAAAu4wlPwbrN9WV6aW8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO3IO1ftyDtXa
+	Connection: keep-alive
+	Content-Length: 0
+
+    GET /pikaqiu.jpg HTTP/1.1
+	Host: 0.0.0.0:2348
+	User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0
+	Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+	Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+	Accept-Encoding: gzip, deflate
+	Connection: keep-alive

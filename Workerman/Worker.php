@@ -44,13 +44,6 @@ class Worker
     const STATUS_SHUTDOWN = 4;
 
     /**
-     * Status reloading.
-     *
-     * @var int
-     */
-    const STATUS_RELOADING = 8;
-
-    /**
      * After sending the restart command to the child process KILL_WORKER_TIMER_TIME seconds,
      * if the process is still living then forced to kill.
      *
@@ -100,12 +93,6 @@ class Worker
      */
     public $group = '';
 
-    /**
-     * reloadable.
-     *
-     * @var bool
-     */
-    public $reloadable = true;
 
     /**
      * reuse port.
@@ -171,25 +158,12 @@ class Worker
     public $onWorkerStop = null;
 
     /**
-     * Emitted when the master process get reload signal.
-     *
-     * @var callback
-     */
-    public static $onMasterReload = null;
-
-    /**
-     * Emitted when worker processes get reload signal.
-     *
-     * @var callback
-     */
-    public $onWorkerReload = null;
-
-    /**
      * Transport layer protocol.
      *
      * @var string
      */
     public $transport = 'tcp';
+
 
     /**
      * Store all connections of clients.
@@ -571,10 +545,6 @@ class Worker
     {
         // stop
         pcntl_signal(SIGINT, array('\Workerman\Worker', 'signalHandler'), false);
-        // reload
-        pcntl_signal(SIGUSR1, array('\Workerman\Worker', 'signalHandler'), false);
-        // status
-        pcntl_signal(SIGUSR2, array('\Workerman\Worker', 'signalHandler'), false);
         // ignore
         pcntl_signal(SIGPIPE, SIG_IGN, false);
     }
@@ -588,16 +558,8 @@ class Worker
     {
         // uninstall stop signal handler
         pcntl_signal(SIGINT, SIG_IGN, false);
-        // uninstall reload signal handler
-        pcntl_signal(SIGUSR1, SIG_IGN, false);
-        // uninstall  status signal handler
-        pcntl_signal(SIGUSR2, SIG_IGN, false);
         // reinstall stop signal handler
         self::$globalEvent->add(SIGINT, EventInterface::EV_SIGNAL, array('\Workerman\Worker', 'signalHandler'));
-        // reinstall  reload signal handler
-        self::$globalEvent->add(SIGUSR1, EventInterface::EV_SIGNAL, array('\Workerman\Worker', 'signalHandler'));
-        // reinstall  status signal handler
-        self::$globalEvent->add(SIGUSR2, EventInterface::EV_SIGNAL, array('\Workerman\Worker', 'signalHandler'));
     }
 
     /**
@@ -611,11 +573,6 @@ class Worker
             // Stop.
             case SIGINT:
                 self::stopAll();
-                break;
-            // Reload.
-            case SIGUSR1:
-                self::$_pidsToRestart = self::getAllWorkerPids();
-                self::reload();
                 break;
         }
     }
@@ -824,20 +781,6 @@ class Worker
                         break;
                     }
                 }
-                // Is still running state then fork a new worker process.
-                if (self::$_status !== self::STATUS_SHUTDOWN) {
-                    self::forkWorkers();
-                    // If reloading continue.
-                    if (isset(self::$_pidsToRestart[$pid])) {
-                        unset(self::$_pidsToRestart[$pid]);
-                        self::reload();
-                    }
-                } else {
-                    // If shutdown state and all child processes exited then master process exit.
-                    if (!self::getAllWorkerPids()) {
-                        self::exitAndClearAll();
-                    }
-                }
             } else {
                 // If shutdown state and all child processes exited then master process exit.
                 if (self::$_status === self::STATUS_SHUTDOWN && !self::getAllWorkerPids()) {
@@ -865,70 +808,6 @@ class Worker
         exit(0);
     }
 
-    /**
-     * Execute reload.
-     *
-     * @return void
-     */
-    protected static function reload()
-    {
-        // For master process.
-        if (self::$_masterPid === posix_getpid()) {
-            // Set reloading state.
-            if (self::$_status !== self::STATUS_RELOADING && self::$_status !== self::STATUS_SHUTDOWN) {
-                self::$_status = self::STATUS_RELOADING;
-                // Try to emit onMasterReload callback.
-                if (self::$onMasterReload) {
-                    call_user_func(self::$onMasterReload);
-                    self::initId();
-                }
-            }
-
-            // Send reload signal to all child processes.
-            $reloadable_pid_array = array();
-            foreach (self::$_pidMap as $worker_id => $worker_pid_array) {
-                $worker = self::$_workers[$worker_id];
-                if ($worker->reloadable) {
-                    foreach ($worker_pid_array as $pid) {
-                        $reloadable_pid_array[$pid] = $pid;
-                    }
-                } else {
-                    foreach ($worker_pid_array as $pid) {
-                        // Send reload signal to a worker process which reloadable is false.
-                        posix_kill($pid, SIGUSR1);
-                    }
-                }
-            }
-
-            // Get all pids that are waiting reload.
-            self::$_pidsToRestart = array_intersect(self::$_pidsToRestart, $reloadable_pid_array);
-
-            // Reload complete.
-            if (empty(self::$_pidsToRestart)) {
-                if (self::$_status !== self::STATUS_SHUTDOWN) {
-                    self::$_status = self::STATUS_RUNNING;
-                }
-                return;
-            }
-            // Continue reload.
-            $one_worker_pid = current(self::$_pidsToRestart);
-            // Send reload signal to a worker process.
-            posix_kill($one_worker_pid, SIGUSR1);
-            // If the process does not exit after self::KILL_WORKER_TIMER_TIME seconds try to kill it.
-            Timer::add(self::KILL_WORKER_TIMER_TIME, 'posix_kill', array($one_worker_pid, SIGKILL), false);
-        } // For child processes.
-        else {
-            $worker = current(self::$_workers);
-            // Try to emit onWorkerReload callback.
-            if ($worker->onWorkerReload) {
-                call_user_func($worker->onWorkerReload, $worker);
-            }
-
-            if ($worker->reloadable) {
-                self::stopAll();
-            }
-        }
-    }
 
     /**
      * Stop.
