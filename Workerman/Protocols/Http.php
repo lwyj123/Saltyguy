@@ -51,7 +51,7 @@ class Http
             } else {
                 return 0;
             }
-        } elseif (0 === strpos($recv_buffer, "GET")) {
+        } elseif (0 === strpos($recv_buffer, "GET") || 0 === strpos($recv_buffer, "HEAD") || 0 === strpos($recv_buffer, "OPTIONS")) {
             return strlen($header) + 4;
         } else {
             $connection->send("HTTP/1.1 400 Bad Request\r\n\r\n", true);
@@ -186,6 +186,10 @@ class Http
             unset(HttpCache::$header['Http-Code']);
         }
 
+	if (_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+		$header .= "Allow: GET, HEAD, POST, OPTIONS\r\n"
+	}
+
         // Content-Type
         if (!isset(HttpCache::$header['Content-Type'])) {
             $header .= "Content-Type: text/html;charset=utf-8\r\n";
@@ -203,13 +207,25 @@ class Http
         }
 
         // header
-        $header .= "Server: workerman/" . Worker::VERSION . "\r\nContent-Length: " . strlen($content) . "\r\n\r\n";
+  	$header .= "Server: workerman/" . Worker::VERSION . "\r\nContent-Length: ";
+	if (_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+		//as RFC 7230 requires: the Content-Length field must be 0 if there is no payload
+		$header .= "0\r\n\r\n";
+	}
+	else {
+		$header .= strlen($content) . "\r\n\r\n";
+	}
 
         // save session
         self::sessionWriteClose();
 
         // the whole http package
-        return $header . $content;
+	if ($_SERVER['REQUEST_METHOD'] === 'HEAD' || $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+		return $header;
+	}
+	else {
+		return $header . $content;
+	}
     }
 
     /**
