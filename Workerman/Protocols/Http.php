@@ -187,7 +187,7 @@ class Http
         }
 
 	if (_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-		$header .= "Allow: GET, HEAD, POST, OPTIONS\r\n"
+		$header .= "Allow: GET, HEAD, POST, OPTIONS\r\n";
 	}
 
         // Content-Type
