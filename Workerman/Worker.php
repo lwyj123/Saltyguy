@@ -311,22 +311,11 @@ class Worker
     protected static $_startFile = '';
 
     /**
-     * Available event loops.
-     *
-     * @var array
-     */
-    protected static $_availableEventLoops = array(
-        'libevent',
-        'event',
-        'ev'
-    );
-
-    /**
      * Current eventLoop name.
      *
      * @var string
      */
-    protected static $_eventLoopName = 'select';
+    protected static $_eventLoopName = 'libevent';
 
     /**
      * PHP built-in protocols.
@@ -555,15 +544,6 @@ class Worker
      */
     protected static function getEventLoopName()
     {
-        if (interface_exists('\React\EventLoop\LoopInterface')) {
-            return 'React';
-        }
-        foreach (self::$_availableEventLoops as $name) {
-            if (extension_loaded($name)) {
-                self::$_eventLoopName = $name;
-                break;
-            }
-        }
         return self::$_eventLoopName;
     }
 

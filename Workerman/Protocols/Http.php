@@ -186,7 +186,7 @@ class Http
             unset(HttpCache::$header['Http-Code']);
         }
 
-	if (_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+	if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 		$header .= "Allow: GET, HEAD, POST, OPTIONS\r\n";
 	}
 
@@ -208,7 +208,7 @@ class Http
 
         // header
   	$header .= "Server: workerman/" . Worker::VERSION . "\r\nContent-Length: ";
-	if (_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+	if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 		//as RFC 7230 requires: the Content-Length field must be 0 if there is no payload
 		$header .= "0\r\n\r\n";
 	}
