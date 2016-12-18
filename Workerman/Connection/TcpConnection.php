@@ -489,29 +489,6 @@ class TcpConnection extends ConnectionInterface
     }
 
     /**
-     * This method pulls all the data out of a readable stream, and writes it to the supplied destination.
-     *
-     * @param TcpConnection $dest
-     * @return void
-     */
-    public function pipe($dest)
-    {
-        $source              = $this;
-        $this->onMessage     = function ($source, $data) use ($dest) {
-            $dest->send($data);
-        };
-        $this->onClose       = function ($source) use ($dest) {
-            $dest->destroy();
-        };
-        $dest->onBufferFull  = function ($dest) use ($source) {
-            $source->pauseRecv();
-        };
-        $dest->onBufferDrain = function ($dest) use ($source) {
-            $source->resumeRecv();
-        };
-    }
-
-    /**
      * Remove $length of data from receive buffer.
      *
      * @param int $length

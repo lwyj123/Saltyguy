@@ -176,7 +176,9 @@ class WebServer extends Worker
             }
         }
 
+
         // File exsits.
+        echo $workerman_file;
         if (is_file($workerman_file)) {
             // Security check.
             if ((!($workerman_request_realpath = realpath($workerman_file)) || !($workerman_root_dir_realpath = realpath($workerman_root_dir))) || 0 !== strpos($workerman_request_realpath,

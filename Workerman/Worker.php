@@ -20,7 +20,7 @@ class Worker
      *
      * @var string
      */
-    const VERSION = '3.3.6';
+    const VERSION = '0.0.1';
 
     /**
      * Status starting.
@@ -787,7 +787,7 @@ class Worker
         if (!self::$globalEvent) {
             $eventLoopClass    = "\\Workerman\\Events\\" . ucfirst(self::getEventLoopName());
             self::$globalEvent = new $eventLoopClass;
-            // Register a listener to be notified when server socket is ready to read.
+            // 注册一个监听器来通知socket可读
             if ($this->_socketName) {
                 self::$globalEvent->add($this->_mainSocket, EventInterface::EV_READ, array($this, 'acceptConnection'));
             }

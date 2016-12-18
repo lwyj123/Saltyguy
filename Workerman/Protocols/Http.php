@@ -207,7 +207,7 @@ class Http
         }
 
         // header
-  	$header .= "Server: workerman/" . Worker::VERSION . "\r\nContent-Length: ";
+  	$header .= "Server: saltyguy/" . Worker::VERSION . "\r\nContent-Length: ";
 	if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 		//as RFC 7230 requires: the Content-Length field must be 0 if there is no payload
 		$header .= "0\r\n\r\n";
@@ -215,9 +215,6 @@ class Http
 	else {
 		$header .= strlen($content) . "\r\n\r\n";
 	}
-
-        // save session
-        self::sessionWriteClose();
 
         // the whole http package
 	if ($_SERVER['REQUEST_METHOD'] === 'HEAD' || $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -280,124 +277,6 @@ class Http
             return;
         }
         unset(HttpCache::$header[$name]);
-    }
-
-    /**
-     * Set cookie.
-     *
-     * @param string  $name
-     * @param string  $value
-     * @param integer $maxage
-     * @param string  $path
-     * @param string  $domain
-     * @param bool    $secure
-     * @param bool    $HTTPOnly
-     * @return bool|void
-     */
-    public static function setcookie(
-        $name,
-        $value = '',
-        $maxage = 0,
-        $path = '',
-        $domain = '',
-        $secure = false,
-        $HTTPOnly = false
-    ) {
-        if (PHP_SAPI != 'cli') {
-            return setcookie($name, $value, $maxage, $path, $domain, $secure, $HTTPOnly);
-        }
-        return self::header(
-            'Set-Cookie: ' . $name . '=' . rawurlencode($value)
-            . (empty($domain) ? '' : '; Domain=' . $domain)
-            . (empty($maxage) ? '' : '; Max-Age=' . $maxage)
-            . (empty($path) ? '' : '; Path=' . $path)
-            . (!$secure ? '' : '; Secure')
-            . (!$HTTPOnly ? '' : '; HttpOnly'), false);
-    }
-
-    /**
-     * sessionStart
-     *
-     * @return bool
-     */
-    public static function sessionStart()
-    {
-        if (PHP_SAPI != 'cli') {
-            return session_start();
-        }
-
-        self::tryGcSessions();
-
-        if (HttpCache::$instance->sessionStarted) {
-            echo "already sessionStarted\n";
-            return true;
-        }
-        HttpCache::$instance->sessionStarted = true;
-        // Generate a SID.
-        if (!isset($_COOKIE[HttpCache::$sessionName]) || !is_file(HttpCache::$sessionPath . '/ses' . $_COOKIE[HttpCache::$sessionName])) {
-            $file_name = tempnam(HttpCache::$sessionPath, 'ses');
-            if (!$file_name) {
-                return false;
-            }
-            HttpCache::$instance->sessionFile = $file_name;
-            $session_id                       = substr(basename($file_name), strlen('ses'));
-            return self::setcookie(
-                HttpCache::$sessionName
-                , $session_id
-                , ini_get('session.cookie_lifetime')
-                , ini_get('session.cookie_path')
-                , ini_get('session.cookie_domain')
-                , ini_get('session.cookie_secure')
-                , ini_get('session.cookie_httponly')
-            );
-        }
-        if (!HttpCache::$instance->sessionFile) {
-            HttpCache::$instance->sessionFile = HttpCache::$sessionPath . '/ses' . $_COOKIE[HttpCache::$sessionName];
-        }
-        // Read session from session file.
-        if (HttpCache::$instance->sessionFile) {
-            $raw = file_get_contents(HttpCache::$instance->sessionFile);
-            if ($raw) {
-                session_decode($raw);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Save session.
-     *
-     * @return bool
-     */
-    public static function sessionWriteClose()
-    {
-        if (PHP_SAPI != 'cli') {
-            return session_write_close();
-        }
-        if (!empty(HttpCache::$instance->sessionStarted) && !empty($_SESSION)) {
-            $session_str = session_encode();
-            if ($session_str && HttpCache::$instance->sessionFile) {
-                return file_put_contents(HttpCache::$instance->sessionFile, $session_str);
-            }
-        }
-        return empty($_SESSION);
-    }
-
-    /**
-     * End, like call exit in php-fpm.
-     *
-     * @param string $msg
-     * @throws \Exception
-     */
-    public static function end($msg = '')
-    {
-        if (PHP_SAPI != 'cli') {
-            exit($msg);
-        }
-        if ($msg) {
-            echo $msg;
-        }
-        throw new \Exception('jump_exit');
     }
 
     /**

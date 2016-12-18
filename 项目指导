@@ -41,3 +41,16 @@ Master-Worker 模式
 http://blog.csdn.net/lmdcszh/article/details/39698189
 
 pid文件
+
+php文件解析
+	ob_start();
+	include $salty_file;
+	$content = ob_get_clean();
+
+
+
+展示视频指导：
+    1.演示html、php
+    2.演示get post head options
+    3. 304 check   stat()
+    4. 大文件  （看WebServer的sendFile 和connection里面的处理*）

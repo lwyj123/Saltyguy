@@ -11,12 +11,6 @@ $webserver->addRoot('www.example.com', '/home/lw/Saltyguy/');
 $webserver->count = 4;
 
 
-// 接收到浏览器发送的数据时回复hello world给浏览器
-$webserver->onMessage = function($connection, $data)
-{
-    // 向浏览器发送hello world
-    $connection->send('hello world and fvck java');
-};
 
 // 运行worker
 Worker::runAll();
