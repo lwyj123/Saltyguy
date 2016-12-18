@@ -93,14 +93,6 @@ class Worker
      */
     public $group = '';
 
-
-    /**
-     * reuse port.
-     *
-     * @var bool
-     */
-    public $reusePort = false;
-
     /**
      * Emitted when worker processes start.
      *
@@ -282,28 +274,6 @@ class Worker
     protected static $_status = self::STATUS_STARTING;
 
     /**
-     * Maximum length of the worker names.
-     *
-     * @var int
-     */
-    protected static $_maxWorkerNameLength = 12;
-
-    /**
-     * Maximum length of the socket names.
-     *
-     * @var int
-     */
-    protected static $_maxSocketNameLength = 12;
-
-    /**
-     * Maximum length of the process user names.
-     *
-     * @var int
-     */
-    protected static $_maxUserNameLength = 12;
-
-
-    /**
      * Start file.
      *
      * @var string
@@ -324,21 +294,15 @@ class Worker
      */
     protected static $_builtinTransports = array(
         'tcp'   => 'tcp',
-        'unix'  => 'unix',
-        'ssl'   => 'tcp',
-        'sslv2' => 'tcp',
-        'sslv3' => 'tcp',
-        'tls'   => 'tcp'
     );
 
     /**
-     * Run all worker instances.
+     * 运行所有worker实例
      *
      * @return void
      */
     public static function runAll()
     {
-        self::checkSapiEnv();
         self::init();
         self::parseCommand();
         self::initWorkers();
@@ -349,51 +313,38 @@ class Worker
     }
 
     /**
-     * 检测cli
-     *
-     * @return void
-     */
-    protected static function checkSapiEnv()
-    {
-        // Only for cli.
-        if (php_sapi_name() != "cli") {
-            exit("only run in command line mode \n");
-        }
-    }
-
-    /**
-     * Init.
+     * 初始化
      *
      * @return void
      */
     protected static function init()
     {
-        // Start file.
+        // 获取启动文件名
         $backtrace        = debug_backtrace();
         self::$_startFile = $backtrace[count($backtrace) - 1]['file'];
 
-        // Pid file.
+        // Pid 文件
         if (empty(self::$pidFile)) {
             self::$pidFile = __DIR__ . "/../" . str_replace('/', '_', self::$_startFile) . ".pid";
         }
 
 
-        // State.
+        // Worker的状态初始化为Starting
         self::$_status = self::STATUS_STARTING;
 
 
-        // Process title.
-        self::setProcessTitle('WorkerMan: master process  start_file=' . self::$_startFile);
+        // 设置进程标题
+        self::setProcessTitle('Saltyguy: master process  start_file=' . self::$_startFile);
 
-        // Init data for worker id.
+        // 初始化 worker id.
         self::initId();
 
-        // Timer init.
+        // 初始化Timer.
         Timer::init();
     }
 
     /**
-     * Init All worker instances.
+     * 初始化所有Worker
      *
      * @return void
      */
@@ -405,38 +356,18 @@ class Worker
                 $worker->name = 'none';
             }
 
-            // Get maximum length of worker name.
-            $worker_name_length = strlen($worker->name);
-            if (self::$_maxWorkerNameLength < $worker_name_length) {
-                self::$_maxWorkerNameLength = $worker_name_length;
-            }
-
-            // Get maximum length of socket name.
-            $socket_name_length = strlen($worker->getSocketName());
-            if (self::$_maxSocketNameLength < $socket_name_length) {
-                self::$_maxSocketNameLength = $socket_name_length;
-            }
-
-            // Get unix user of the worker process.
+            // 获取Worker进程的用户
             if (empty($worker->user)) {
                 $worker->user = self::getCurrentUser();
             }
 
-            // Get maximum length of unix user name.
-            $user_name_length = strlen($worker->user);
-            if (self::$_maxUserNameLength < $user_name_length) {
-                self::$_maxUserNameLength = $user_name_length;
-            }
-
-            // Listen.
-            if (!$worker->reusePort) {
-                $worker->listen();
-            }
+            // 监听
+            $worker->listen();
         }
     }
 
     /**
-     * Get all worker instances.
+     * 返回worker数组
      *
      * @return array
      */
@@ -471,7 +402,7 @@ class Worker
     }
 
     /**
-     * Get unix user of current porcess.
+     * 获取当前进程用户
      *
      * @return string
      */
@@ -482,20 +413,20 @@ class Worker
     }
 
     /**
-     * Display staring UI.
+     * 界面显示
      *
      * @return void
      */
     protected static function displayUI()
     {
-        self::safeEcho("workerman start\n");
+        self::safeEcho("Saltyguy \n");
         self::safeEcho("----------------------------------------------------------------\n");
         self::safeEcho("Press Ctrl-C to quit. Start success.\n");
     }
 
     /**
-     * Parse command.
-     * php yourfile.php start ...
+     * 解析指令
+     * php filename.php start
      *
      * @return void
      */
@@ -525,16 +456,15 @@ class Worker
     }
 
     /**
-     * Save pid.
+     * 保存Master进程的pid
      *
      * @throws Exception
      */
     protected static function saveMasterPid()
     {
         self::$_masterPid = posix_getpid();
-        if (false === @file_put_contents(self::$pidFile, self::$_masterPid)) {
-            throw new Exception('can not save pid to ' . self::$pidFile);
-        }
+        @file_put_contents(self::$pidFile, self::$_masterPid);
+
     }
 
     /**
@@ -548,7 +478,7 @@ class Worker
     }
 
     /**
-     * Get all pids of worker processes.
+     * 获取所有Worker的pid  pid_array[worker_id=>pid]
      *
      * @return array
      */
@@ -575,10 +505,7 @@ class Worker
                 if (empty($worker->name)) {
                     $worker->name = $worker->getSocketName();
                 }
-                $worker_name_length = strlen($worker->name);
-                if (self::$_maxWorkerNameLength < $worker_name_length) {
-                    self::$_maxWorkerNameLength = $worker_name_length;
-                }
+
             }
 
             $worker->count = $worker->count <= 0 ? 1 : $worker->count;
@@ -589,7 +516,7 @@ class Worker
     }
 
     /**
-     * Fork one worker process.
+     * Fork 一个worker进程.
      *
      * @param Worker $worker
      * @throws Exception
@@ -602,20 +529,16 @@ class Worker
             return;
         }
         $pid = pcntl_fork();
-        // For master process.
+        // 对于Master进程.
         if ($pid > 0) {
             self::$_pidMap[$worker->workerId][$pid] = $pid;
             self::$_idMap[$worker->workerId][$id]   = $pid;
-        } // For child processes.
+        } // 对于子进程.
         elseif (0 === $pid) {
-            if ($worker->reusePort) {
-                $worker->listen();
-            }
-
             self::$_pidMap  = array();
             self::$_workers = array($worker->workerId => $worker);
             Timer::delAll();
-            self::setProcessTitle('WorkerMan: worker process  ' . $worker->name . ' ' . $worker->getSocketName());
+            self::setProcessTitle('Saltyguy: worker process  ' . $worker->name . ' ' . $worker->getSocketName());
             $worker->setUserAndGroup();
             $worker->id = $id;
             $worker->run();
@@ -626,7 +549,7 @@ class Worker
     }
 
     /**
-     * Get worker id.
+     * 检测一个worker中是否有某个pid
      *
      * @param int $worker_id
      * @param int $pid
@@ -637,19 +560,19 @@ class Worker
     }
 
     /**
-     * Set unix user and group for current process.
+     * 为当前进程设置用户和用户组.
      *
      * @return void
      */
     public function setUserAndGroup()
     {
-        // Get uid.
+        // 获取uid
         $user_info = posix_getpwnam($this->user);
         if (!$user_info) {
             return;
         }
         $uid = $user_info['uid'];
-        // Get gid.
+        // 获取gid
         if ($this->group) {
             $group_info = posix_getgrnam($this->group);
             if (!$group_info) {
@@ -660,7 +583,7 @@ class Worker
             $gid = $user_info['gid'];
         }
 
-        // Set uid and gid.
+        // 设置uid和gid
         if ($uid != posix_getuid() || $gid != posix_getgid()) {
             if (!posix_setgid($gid) || !posix_initgroups($user_info['name'], $gid) || !posix_setuid($uid)) {
             }
@@ -668,7 +591,7 @@ class Worker
     }
 
     /**
-     * Set process name.
+     * 设置进程名
      *
      * @param string $title
      * @return void
@@ -676,16 +599,11 @@ class Worker
     protected static function setProcessTitle($title)
     {
         // >=php 5.5
-        if (function_exists('cli_set_process_title')) {
-            @cli_set_process_title($title);
-        } // Need proctitle when php<=5.5 .
-        elseif (extension_loaded('proctitle') && function_exists('setproctitle')) {
-            @setproctitle($title);
-        }
+        @cli_set_process_title($title);
     }
 
     /**
-     * Monitor all child processes.
+     * 监控所有子进程
      *
      * @return void
      */
@@ -697,12 +615,14 @@ class Worker
             pcntl_signal_dispatch();
             // Suspends execution of the current process until a child has exited, or until a signal is delivered
             $status = 0;
+
+            //等待一个子进程退出或收到一个信号
             $pid    = pcntl_wait($status, WUNTRACED);
             // Calls signal handlers for pending signals again.
             pcntl_signal_dispatch();
-            // If a child has already exited.
+            // 如果是一个子进程退出
             if ($pid > 0) {
-                // Find out witch worker process exited.
+                // 查找是哪一个进程并调整状态
                 foreach (self::$_pidMap as $worker_id => $worker_pid_array) {
                     if (isset($worker_pid_array[$pid])) {
                         $worker = self::$_workers[$worker_id];
@@ -735,10 +655,6 @@ class Worker
     {
         foreach (self::$_workers as $worker) {
             $socket_name = $worker->getSocketName();
-            if ($worker->transport === 'unix' && $socket_name) {
-                list(, $address) = explode(':', $socket_name, 2);
-                @unlink($address);
-            }
         }
         @unlink(self::$pidFile);
         exit(0);
@@ -759,7 +675,7 @@ class Worker
     }
 
     /**
-     * Construct.
+     * 构造函数
      *
      * @param string $socket_name
      * @param array  $context_option
@@ -771,7 +687,7 @@ class Worker
         self::$_workers[$this->workerId] = $this;
         self::$_pidMap[$this->workerId]  = array();
 
-        // Get autoload root path.
+        //获取根目录
         $backtrace                = debug_backtrace();
         $this->_autoloadRootPath = dirname($backtrace[0]['file']);
 
@@ -790,7 +706,7 @@ class Worker
     }
 
     /**
-     * Listen port.
+     * 监听端口
      *
      * @throws Exception
      */
@@ -804,7 +720,7 @@ class Worker
         Autoloader::setRootPath($this->_autoloadRootPath);
 
         $local_socket = $this->_socketName;
-        // Get the application layer communication protocol and listening address.
+        // 获取协议核地址
         list($scheme, $address) = explode(':', $this->_socketName, 2);
         // Check application layer protocol class.
         if (!isset(self::$_builtinTransports[$scheme])) {
@@ -821,18 +737,12 @@ class Worker
                 }
             }
             $local_socket = $this->transport . ":" . $address;
-        } else {
-            $this->transport = self::$_builtinTransports[$scheme];
         }
 
         // Flag.
         $flags  = STREAM_SERVER_BIND | STREAM_SERVER_LISTEN;
         $errno  = 0;
         $errmsg = '';
-        // SO_REUSEPORT.
-        if ($this->reusePort) {
-            stream_context_set_option($this->_context, 'socket', 'so_reuseport', 1);
-        }
 
         // Create an Internet or Unix domain server socket.
         $this->_mainSocket = stream_socket_server($local_socket, $errno, $errmsg, $flags, $this->_context);
@@ -840,12 +750,6 @@ class Worker
             throw new Exception($errmsg);
         }
 
-        // Try to open keepalive for tcp and disable Nagle algorithm.
-        if (function_exists('socket_import_stream') && $this->transport === 'tcp') {
-            $socket = socket_import_stream($this->_mainSocket);
-            @socket_set_option($socket, SOL_SOCKET, SO_KEEPALIVE, 1);
-            @socket_set_option($socket, SOL_TCP, TCP_NODELAY, 1);
-        }
 
         // Non blocking.
         stream_set_blocking($this->_mainSocket, 0);

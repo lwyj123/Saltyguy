@@ -36,3 +36,8 @@ recv_buffer的格式(original header)
 高性能IO模型浅析 http://www.cnblogs.com/fanzhidongyzby/p/4098546.html
 
 libevent 实现简单web server  http://www.phpddt.com/php/libevent.html
+
+Master-Worker 模式 
+http://blog.csdn.net/lmdcszh/article/details/39698189
+
+pid文件
