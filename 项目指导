@@ -54,3 +54,12 @@ php文件解析
     2.演示get post head options
     3. 304 check   stat()
     4. 大文件  （看WebServer的sendFile 和connection里面的处理*）
+
+ppt方针：
+    1.项目介绍
+    2.主要技术
+        2.1 master-worker模式
+        2.2 io多路复用 （Swoole workerman；io多路复用 并发   http://www.phpddt.com/php/libevent.html  https://www.sdk.cn/news/2568）
+        2.3 php解析
+        2.4 大文件传输 
+    3.项目演示视屏
