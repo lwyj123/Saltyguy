@@ -257,47 +257,15 @@ class TcpConnection extends ConnectionInterface
             return false;
         }
 
-        // Attempt to send data directly.
         if ($this->_sendBuffer === '') {
             $len = @fwrite($this->_socket, $send_buffer);
-            // send successful.
+            // 发送成功
             if ($len === strlen($send_buffer)) {
                 return true;
             }
-            // Send only part of the data.
-            if ($len > 0) {
-                $this->_sendBuffer = substr($send_buffer, $len);
-            } else {
-                // Connection closed?
-                if (!is_resource($this->_socket) || feof($this->_socket)) {
-                    if ($this->onError) {
-                        try {
-                            call_user_func($this->onError, $this, WORKERMAN_SEND_FAIL, 'client closed');
-                        } catch (\Exception $e) {
-                            Worker::log($e);
-                            exit(250);
-                        } catch (\Error $e) {
-                            Worker::log($e);
-                            exit(250);
-                        }
-                    }
-                    $this->destroy();
-                    return false;
-                }
-                $this->_sendBuffer = $send_buffer;
-            }
-            Worker::$globalEvent->add($this->_socket, EventInterface::EV_WRITE, array($this, 'baseWrite'));
-            // Check if the send buffer will be full.
-            $this->checkBufferWillFull();
-            return null;
-        } else {
-            if ($this->bufferIsFull()) {
+            else {
                 return false;
             }
-
-            $this->_sendBuffer .= $send_buffer;
-            // Check if the send buffer is full.
-            $this->checkBufferWillFull();
         }
     }
 
