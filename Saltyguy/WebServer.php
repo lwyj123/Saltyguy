@@ -159,10 +159,6 @@ class WebServer extends Worker
 
         $workerman_path_info      = pathinfo($workerman_path);
         $workerman_file_extension = isset($workerman_path_info['extension']) ? $workerman_path_info['extension'] : '';
-        if ($workerman_file_extension === '') {
-            $workerman_path           = ($len = strlen($workerman_path)) && $workerman_path[$len - 1] === '/' ? $workerman_path . 'index.php' : $workerman_path . '/index.php';
-            $workerman_file_extension = 'php';
-        }
 
         $workerman_root_dir = isset($this->serverRoot[$_SERVER['SERVER_NAME']]) ? $this->serverRoot[$_SERVER['SERVER_NAME']] : current($this->serverRoot);
 

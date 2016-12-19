@@ -54,3 +54,4 @@ php文件解析
     2.演示get post head options
     3. 304 check   stat()
     4. 大文件  （看WebServer的sendFile 和connection里面的处理*）
+
