@@ -256,7 +256,7 @@ class WebServer extends Worker
         $do_write = function()use($connection)
         {
             // Send buffer not full.
-            while(empty($connection->bufferFull))
+            while(1)
             {
                 // Read from disk.
                 $buffer = fread($connection->fileHandler, 8192);
