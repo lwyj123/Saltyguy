@@ -186,9 +186,9 @@ class Http
             unset(HttpCache::$header['Http-Code']);
         }
 
-	if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-		$header .= "Allow: GET, HEAD, POST, OPTIONS\r\n";
-	}
+	   if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+		    $header .= "Allow: GET, HEAD, POST, OPTIONS\r\n";
+	   }
 
         // Content-Type
         if (!isset(HttpCache::$header['Content-Type'])) {

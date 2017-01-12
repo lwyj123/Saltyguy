@@ -213,15 +213,14 @@ class WebServer extends Worker
 
     public static function sendFile($connection, $file_path)
     {
-        // Check 304.
+        // 304.
         $info = stat($file_path);
         $modified_time = $info ? date('D, d M Y H:i:s', $info['mtime']) . ' GMT' : '';
         if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) && $info) {
             // Http 304.
             if ($modified_time === $_SERVER['HTTP_IF_MODIFIED_SINCE']) {
-                // 304
                 Http::header('HTTP/1.1 304 Not Modified');
-                // Send nothing but http headers..
+                // 304只发送头部
                 $connection->close('');
                 return;
             }
